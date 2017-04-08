@@ -12,7 +12,8 @@ namespace Ferbot.Data
 {
 
 	/// <summary>
-	/// This is the Object that reads and writes the Aliases to disk so that they can be used after bot shut-down.
+	/// This is the Object that reads and writes the Aliases to disk so that they can be used after bot shut-down. 
+	/// This is the ONLY class that actually calls for read and write operations to the JSON Helper
 	/// </summary>
 	class DataController
 	{
@@ -49,6 +50,7 @@ namespace Ferbot.Data
 		/// <returns></returns>
 		public AddSuccess AddAlias(ulong UserID, string Alias)
 		{
+			Aliases tempAliases = _aliases;
 			var SuccessLevel = AddSuccess.AlreadyExists;
 			bool SuccessfulWrite = false;
 			//See if the user has Saved any Aliases previously
@@ -82,6 +84,7 @@ namespace Ferbot.Data
 			}
 			else
 			{
+				_aliases = tempAliases;
 				return AddSuccess.WriteFailure;
 			}
 		}
@@ -94,6 +97,7 @@ namespace Ferbot.Data
 		/// <returns></returns>
 		public RemoveSuccess RemoveAlias(ulong UserID, string Alias)
 		{
+			Aliases tempAliases = _aliases;
 			var SuccessLevel = RemoveSuccess.NoSuchAlias;
 			bool SuccessfulWrite = false;
 
@@ -119,14 +123,31 @@ namespace Ferbot.Data
 			}
 			else
 			{
+				_aliases = tempAliases;
 				return RemoveSuccess.WriteFailure;
 			}
 
 		}
 
+
+		/// <summary>
+		/// After a change to the Aliases list, attempt to write the changes to disk
+		/// </summary>
+		/// <returns>Returns whether or not an error occured during writing.</returns>
 		private bool WriteToDisk()
 		{
-			throw new NotImplementedException();
+			DateTime now = DateTime.Now.ToUniversalTime();
+			try
+			{
+				File.Copy(@"..\..\UserAliases.json", @"..\..\UserAliasesBckUp.json", true);
+				jh.WriteJsonFile<Aliases>(@"..\..\UserAliases.json", _aliases);
+			} catch
+			{
+				File.Copy(@"..\..\UserAliasesBckUp.json", $@"..\..\UserAliasesBckUpKnownGood_{now.Year}-{now.Month}-{now.Day}-{now.Hour}:{now.Minute}:{now.Second}.json", true);
+				File.Copy(@"..\..\UserAliasesBckUp.json", @"..\..\UserAliases.json", true);
+				return false;
+			}
+			return true;
 		}
 	}
 }
