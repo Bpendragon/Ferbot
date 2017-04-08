@@ -39,7 +39,7 @@ namespace Ferbot.Data
 		{
 			this.jh = jh;
 			BotConfig = jh.ReadJsonFile<BotConfig>(@"..\..\BotConfig.json");
-			_aliases = jh.ReadJsonFile<Aliases>(@"..\..\UserAliases.json");
+			_aliases = jh.ReadJsonFile<Aliases>(@"..\..\UserAliases.json") ?? new Aliases();
 		}
 
 		/// <summary>
@@ -133,7 +133,10 @@ namespace Ferbot.Data
 		/// <summary>
 		/// After a change to the Aliases list, attempt to write the changes to disk
 		/// </summary>
-		/// <returns>Returns whether or not an error occured during writing.</returns>
+		/// <returns>
+		/// Returns whether or not an error occured during writing.
+		/// If an Error does occur, reverts everything back to previous file
+		/// </returns>
 		private bool WriteToDisk()
 		{
 			DateTime now = DateTime.Now.ToUniversalTime();
