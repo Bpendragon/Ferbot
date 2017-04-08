@@ -17,6 +17,9 @@ namespace Ferbot.Data
 	class DataController
 	{
 		JsonHelper jh;
+		/// <summary>
+		/// This is actually just a nice way of viewing the UserAliases of the underlying _aliases object
+		/// </summary>
 		public Dictionary<ulong, List<string>> UserAliases
 		{
 			get
@@ -27,6 +30,10 @@ namespace Ferbot.Data
 		private Aliases _aliases;
 		public BotConfig BotConfig { get; }
 
+		/// <summary>
+		/// This is the Controller which modifies the aliases and then writes changes to disk
+		/// </summary>
+		/// <param name="jh">The JSonHelper that does the actual writing</param>
 		public DataController(JsonHelper jh)
 		{
 			this.jh = jh;
@@ -34,31 +41,41 @@ namespace Ferbot.Data
 			_aliases = jh.ReadJsonFile<Aliases>(@"..\..\UserAliases.json");
 		}
 
+		/// <summary>
+		/// Adds an Alias to the User
+		/// </summary>
+		/// <param name="UserID">ulong UserID of the SocketUser we're saving information for</param>
+		/// <param name="Alias">The Alias the User wants to add and keep track of</param>
+		/// <returns></returns>
 		public AddSuccess AddAlias(ulong UserID, string Alias)
 		{
 			var SuccessLevel = AddSuccess.AlreadyExists;
 			bool SuccessfulWrite = false;
-			if (_aliases.UserAliases.ContainsKey(UserID))
+			//See if the user has Saved any Aliases previously
+			if (UserAliases.ContainsKey(UserID))
 			{
-				if (_aliases.UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
+				//If they have make sure they aren't trying to save the same alias again
+				if (UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
 				{
-					_aliases.UserAliases[UserID].Add(Alias);
+					UserAliases[UserID].Add(Alias);
+					UserAliases[UserID].Sort(StringComparer.InvariantCultureIgnoreCase);
 					SuccessLevel = AddSuccess.Success;
 				}
 			}
-			else
+			else  //If this is their first Alias, get the List for them set up.
 			{
 				var tempList = new List<string>();
 				tempList.Add(Alias);
-				_aliases.UserAliases[UserID] = tempList;
+				UserAliases[UserID] = tempList;
 				SuccessLevel = AddSuccess.Success;
 			}
 
+			//If we had to make any changes, write them to disk
 			if (SuccessLevel != AddSuccess.AlreadyExists)
 			{
 				SuccessfulWrite = WriteToDisk();
 			}
-
+			//Make sure the write was succesful, if not tell the user as such
 			if (SuccessfulWrite)
 			{
 				return SuccessLevel;
@@ -69,13 +86,42 @@ namespace Ferbot.Data
 			}
 		}
 
-		public void RemoveAlias(ulong UserID, string Alias)
+		/// <summary>
+		/// Removes the appropriate alias for the User in question
+		/// </summary>
+		/// <param name="UserID">UserID of the user who wants to remove an alias</param>
+		/// <param name="Alias">The alias we want to remove.</param>
+		/// <returns></returns>
+		public RemoveSuccess RemoveAlias(ulong UserID, string Alias)
 		{
 			var SuccessLevel = RemoveSuccess.NoSuchAlias;
-			if (_aliases.UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
-			{
+			bool SuccessfulWrite = false;
 
+			//Make sure the Alias we want actually exists. We can also check to make sure the user has even added any aliases previously
+			if (UserAliases[UserID] != null && UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
+			{
+				UserAliases[UserID].RemoveAt(UserAliases[UserID].FindIndex(n => n.Equals(Alias, StringComparison.InvariantCultureIgnoreCase)));
+				SuccessLevel = RemoveSuccess.Success;
 			}
+
+
+			//Attempt to write changes to disk
+			if (SuccessLevel != RemoveSuccess.NoSuchAlias)
+			{
+				SuccessfulWrite = WriteToDisk();
+			}
+
+
+			//Return the outcome
+			if (SuccessfulWrite)
+			{
+				return SuccessLevel;
+			}
+			else
+			{
+				return RemoveSuccess.WriteFailure;
+			}
+
 		}
 
 		private bool WriteToDisk()
