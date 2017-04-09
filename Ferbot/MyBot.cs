@@ -22,13 +22,13 @@ namespace Ferbot
 
 		public async Task MainAsync()
 		{
-
+			client = new DiscordSocketClient();
 			jh = new JsonHelper();
 			dc = new DataController(jh);
-			mc = new MessageController(dc);
+			mc = new MessageController(dc, client);
 
 
-			client = new DiscordSocketClient();
+			
 
 			client.Log += Log;
 
@@ -44,7 +44,6 @@ namespace Ferbot
 		private async Task MessageRecieved(SocketMessage message)
 		{
 			await mc.Message(message);
-
 		}
 
 		private Task Log(LogMessage msg)

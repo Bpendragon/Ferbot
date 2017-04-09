@@ -13,10 +13,14 @@ namespace Ferbot.Data
 
 		public Dictionary<ulong, List<String>> UserAliases { get; set; }
 
-		public Aliases() { }
-		
+		public Aliases()
+		{
+			UserAliases = new Dictionary<ulong, List<string>>();
+		}
+
 		public Aliases(ulong ID, string alias)
 		{
+			UserAliases = new Dictionary<ulong, List<string>>();
 			UserAliases[ID] = new List<string>();
 			UserAliases[ID].Add(alias);
 		}

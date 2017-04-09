@@ -51,17 +51,21 @@ namespace Ferbot.Data
 		public AddSuccess AddAlias(ulong UserID, string Alias)
 		{
 			Aliases tempAliases = _aliases;
-			var SuccessLevel = AddSuccess.AlreadyExists;
+			var SuccessLevel = AddSuccess.Unknown;
 			bool SuccessfulWrite = false;
 			//See if the user has Saved any Aliases previously
 			if (UserAliases.ContainsKey(UserID))
 			{
 				//If they have make sure they aren't trying to save the same alias again
-				if (UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
+				if (!UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
 				{
 					UserAliases[UserID].Add(Alias);
 					UserAliases[UserID].Sort(StringComparer.InvariantCultureIgnoreCase);
 					SuccessLevel = AddSuccess.Success;
+				}
+				else
+				{
+					SuccessLevel = AddSuccess.AlreadyExists;
 				}
 			}
 			else  //If this is their first Alias, get the List for them set up.
@@ -78,7 +82,7 @@ namespace Ferbot.Data
 				SuccessfulWrite = WriteToDisk();
 			}
 			//Make sure the write was succesful, if not tell the user as such
-			if (SuccessfulWrite)
+			if (SuccessfulWrite || SuccessLevel == AddSuccess.AlreadyExists)
 			{
 				return SuccessLevel;
 			}
@@ -98,14 +102,20 @@ namespace Ferbot.Data
 		public RemoveSuccess RemoveAlias(ulong UserID, string Alias)
 		{
 			Aliases tempAliases = _aliases;
-			var SuccessLevel = RemoveSuccess.NoSuchAlias;
+			var SuccessLevel = RemoveSuccess.Unknown;
 			bool SuccessfulWrite = false;
 
 			//Make sure the Alias we want actually exists. We can also check to make sure the user has even added any aliases previously
-			if (UserAliases[UserID] != null && UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
+			if (UserAliases[UserID] != null)
 			{
-				UserAliases[UserID].RemoveAt(UserAliases[UserID].FindIndex(n => n.Equals(Alias, StringComparison.InvariantCultureIgnoreCase)));
-				SuccessLevel = RemoveSuccess.Success;
+				if (UserAliases[UserID].Contains(Alias, StringComparer.InvariantCultureIgnoreCase))
+				{
+					UserAliases[UserID].RemoveAt(UserAliases[UserID].FindIndex(n => n.Equals(Alias, StringComparison.InvariantCultureIgnoreCase)));
+					SuccessLevel = RemoveSuccess.Success;
+				} else
+				{
+					SuccessLevel = RemoveSuccess.NoSuchAlias;
+				}
 			}
 
 
@@ -117,7 +127,7 @@ namespace Ferbot.Data
 
 
 			//Return the outcome
-			if (SuccessfulWrite)
+			if (SuccessfulWrite || SuccessLevel == RemoveSuccess.NoSuchAlias)
 			{
 				return SuccessLevel;
 			}
@@ -144,7 +154,8 @@ namespace Ferbot.Data
 			{
 				File.Copy(@"..\..\UserAliases.json", @"..\..\UserAliasesBckUp.json", true);
 				jh.WriteJsonFile<Aliases>(@"..\..\UserAliases.json", _aliases);
-			} catch
+			}
+			catch
 			{
 				File.Copy(@"..\..\UserAliasesBckUp.json", $@"..\..\UserAliasesBckUpKnownGood_{now.Year}-{now.Month}-{now.Day}-{now.Hour}:{now.Minute}:{now.Second}.json", true);
 				File.Copy(@"..\..\UserAliasesBckUp.json", @"..\..\UserAliases.json", true);

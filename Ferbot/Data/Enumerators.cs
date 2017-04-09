@@ -10,13 +10,15 @@ namespace Ferbot.Data
 	{
 		Success,
 		AlreadyExists,
-		WriteFailure
+		WriteFailure,
+		Unknown
 	}
 
 	enum RemoveSuccess
 	{
 		Success,
 		NoSuchAlias,
-		WriteFailure
+		WriteFailure,
+		Unknown
 	}
 }

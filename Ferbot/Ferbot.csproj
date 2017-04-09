@@ -178,9 +178,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\Enumerators.cs" />
     <Compile Include="Data\Aliases.cs" />
     <Compile Include="Data\DataController.cs" />
     <Compile Include="Data\JsonHelper.cs" />
+    <Compile Include="Messages\FerbotCommands.cs" />
     <Compile Include="Messages\MessageController.cs" />
     <Compile Include="MyBot.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

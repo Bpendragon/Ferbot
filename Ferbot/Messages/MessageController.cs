@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -9,18 +6,34 @@ using Ferbot.Data;
 
 namespace Ferbot.Messages
 {
-	class MessageController
+	partial class MessageController
 	{
 		DataController dc;
-		public MessageController(DataController dc)
+		DiscordSocketClient client;
+	 
+		
+		public MessageController(DataController dc, DiscordSocketClient client)
 		{
 			this.dc = dc;
+			this.client = client;
+			
 		}
 
-		internal Task Message(SocketMessage message)
+		internal async Task Message(SocketMessage message)
 		{
-			throw new NotImplementedException();
+			if (!message.Author.IsBot)
+			{
+				if (message.Content.ToLower().StartsWith("!ferbot"))
+				{
+					await ExecuteCommand(message);
+				}
+				else
+				{
+					await CheckMessage(message);
+				}
+			}
 		}
 
+		
 	}
 }
