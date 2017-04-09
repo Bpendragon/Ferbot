@@ -100,6 +100,8 @@ namespace Ferbot.Messages
 					sb.Remove(sb.Length - 2, 2);
 					sb.Append("\n");
 				}
+
+
 			}
 			else
 			{
@@ -201,7 +203,7 @@ namespace Ferbot.Messages
 		{
 			await message.Channel.SendMessageAsync(
 				$"I'm sorry {message.Author.Mention} but that is not a recognized command\n"
-				+"Please use `!ferbot help` to see current commands"
+				+ "Please use `!ferbot help` to see current commands"
 				);
 		}
 
@@ -237,7 +239,7 @@ namespace Ferbot.Messages
 					usersToNotify.Add(client.GetUser(user.Key));
 			}
 
-			usersToNotify.RemoveAll(n => message.MentionedUsers.Contains(n));
+			usersToNotify.RemoveAll(n => message.MentionedUsers.Contains(n) || message.Author.Id == n.Id);
 			StringBuilder sb = new StringBuilder();
 			foreach (var u in usersToNotify)
 			{
